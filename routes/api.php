@@ -16,9 +16,12 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-Route::apiResource('branch', 'App\Http\Controllers\BranchController');
-Route::apiResource('customer', 'App\Http\Controllers\CustomerController'::class);
-Route::apiResource('entrie', 'App\Http\Controllers\EntrieController'::class);
+Route::group(['middleware' => ['auth:sanctum']], function () {
+    Route::apiResource('branch', 'App\Http\Controllers\BranchController');
+    Route::apiResource('customer', 'App\Http\Controllers\CustomerController');
+});
+
+Route::apiResource('entrie', 'App\Http\Controllers\EntrieController');
 Route::apiResource('product', 'App\Http\Controllers\ProductController');
 Route::apiResource('provider', 'App\Http\Controllers\ProviderController');
 Route::apiResource('sale', 'App\Http\Controllers\SaleController');
