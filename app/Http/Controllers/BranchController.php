@@ -3,15 +3,24 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Branch;
+use App\Http\Requests\BranchStoreRequest;
+use App\Services\Branch\BranchCreateService;
+use App\Services\Branch\BranchDestroyService;
+use App\Services\Branch\BranchIndexService;
+use App\Services\Branch\BranchSearchService;
+use App\Services\Branch\BranchShowService;
+use App\Services\Branch\BranchUpdateService;
 use Illuminate\Http\Request;
 
 class BranchController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $obj = Branch::all();
+            $filters = $request->all();
+            $branchIndexService = new BranchIndexService();
+            $obj = $branchIndexService->execute($filters);
+
             return $this->successResponseWithData(
                 $obj,
                 "Sucursales obtenidas con éxito"
@@ -22,58 +31,46 @@ class BranchController extends Controller
                 500,
                 $e->getMessage()
             );
-
-
         }
     }
 
     public function show($id)
     {
         try {
-            $obj = Branch::findOrFail($id);
-            return response()->json([
-                'status' => 200,
-                'success' => true,
-                'message' => 'Sucursal obtenida correctamente',
-                'data' => $obj
-            ], 200);
+            $branchShowService = new BranchShowService();
+            $obj = $branchShowService->execute($id);
 
+            return $this->successResponseWithData(
+                $obj,
+                "Sucursal obtenida correctamente"
+            );
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 404,
-                'success' => false,
-                'message' => 'Ocurrió un error al obtener la Sucursal',
-                'data' => null,
-                'error' => $e->getMessage()
-            ], 404);
+            return $this->errorResponseWithMessage(
+                'Ocurrió un error al obtener la Sucursal',
+                404,
+                $e->getMessage()
+            );
         }
     }
 
-    public function store(Request $request)
+    public function store(BranchStoreRequest $request)
     {
         try {
-            $validateData = $request->validate([
-                'name' => 'required|string|max:255',
-                'location' => 'nullable|string|max:1000',
-                'status' => 'nullable|string|max:200',
-            ]);
+            $branchCreateService = new BranchCreateService();
+            $obj = $branchCreateService->execute($request->validated());
 
-            $obj = Branch::create($validateData);
-            return response()->json([
-                'status' => 201,
-                'success' => true,
-                'message' => 'Sucursal creada correctamente',
-                'data' => $obj
-            ], 201);
+            return $this->successResponseWithData(
+                $obj,
+                "Sucursal creada correctamente",
+                201
+            );
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'success' => false,
-                'message' => 'Ocurrio un error al crear la Sucursal',
-                'data' => null,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponseWithMessage(
+                'Ocurrio un error al crear la Sucursal',
+                500,
+                $e->getMessage()
+            );
         }
     }
 
@@ -85,69 +82,59 @@ class BranchController extends Controller
                 'description' => 'nullable|string|max:1000',
             ]);
 
-            $obj = Branch::findOrFail($id);
-            $obj->update($validateData);
-            return response()->json([
-                'status' => 200,
-                'success' => true,
-                'message' => 'Sucursal actualizada correctamente',
-                'data' => $obj
-            ], 200);
+            $branchUpdateService = new BranchUpdateService();
+            $obj = $branchUpdateService->execute($id, $validateData);
+
+            return $this->successResponseWithData(
+                $obj,
+                "Sucursal actualizada correctamente"
+            );
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'success' => false,
-                'message' => 'Ocurrio un error al actualizar la Sucursal',
-                'data' => null,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponseWithMessage(
+                'Ocurrio un error al actualizar la Sucursal',
+                500,
+                $e->getMessage()
+            );
         }
-
     }
+
     public function destroy($id)
     {
         try {
-            $obj = Branch::findOrFail($id);
-            $obj->delete();
-            return response()->json([
-                'status' => 200,
-                'success' => true,
-                'message' => 'Sucursal eliminada correctamente',
-                'data' => null
-            ], 200);
+            $branchDestroyService = new BranchDestroyService();
+            $branchDestroyService->execute($id);
+
+            return $this->successResponseSimple(
+                "Sucursal eliminada correctamente"
+            );
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'success' => false,
-                'message' => 'Ocurrio un error al eliminar la Sucursal',
-                'data' => null,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponseWithMessage(
+                'Ocurrio un error al eliminar la Sucursal',
+                500,
+                $e->getMessage()
+            );
         }
     }
 
     public function search($name)
     {
         try {
-            $obj = Branch::where('name', 'like', '%' . $name . '%')->get();
-            //$obj=Category::where('name', 'like', '%' . $name . '%')->first();
-            return response()->json([
-                'status' => 200,
-                'success' => true,
-                'message' => 'Sucursales encontradas correctamente',
-                'data' => $obj
-            ], 200);
+            $branchSearchService = new BranchSearchService();
+            $obj = $branchSearchService->execute($name);
+
+            return $this->successResponseWithData(
+                $obj,
+                "Sucursales encontradas correctamente"
+            );
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'success' => false,
-                'message' => 'Ocurrio un error al buscar la Sucursal',
-                'data' => null,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponseWithMessage(
+                'Ocurrio un error al buscar la Sucursal',
+                500,
+                $e->getMessage()
+            );
         }
     }
 }
