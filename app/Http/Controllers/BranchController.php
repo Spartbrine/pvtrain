@@ -77,13 +77,9 @@ class BranchController extends Controller
     public function update(Request $request, $id)
     {
         try {
-            $validateData = $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:1000',
-            ]);
-
+            $data = $request->all();
             $branchUpdateService = new BranchUpdateService();
-            $obj = $branchUpdateService->execute($id, $validateData);
+            $obj = $branchUpdateService->execute($id, $data);
 
             return $this->successResponseWithData(
                 $obj,
