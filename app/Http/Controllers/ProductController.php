@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProductStoreRequest;
 use App\Models\Product;
+use App\Services\Product\ProductStoreService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Log;
 
 class ProductController extends Controller
 {
@@ -69,37 +72,34 @@ class ProductController extends Controller
     }
 
     // Crear un producto
-    public function store(Request $request)
+    public function store(ProductStoreRequest $request)
     {
+
+        $storeService = new ProductStoreService();
+
         try {
-            $validateData = $request->validate([
-                'name' => 'required|string|max:255',
-                'sku' => 'nullable|string|max:255',
-                'barcode' => 'nullable|string|max:255',
-                'image_url' => 'nullable|string|max:200',
-                'description' => 'nullable|string|max:1000',
-                'price' => 'required|numeric|between:0,99999999.99',
-                'min_stock' => 'nullable|integer|min:1',
-                'category_id' => 'required|exists:categories,id',
-                'status' => 'nullable|string|max:255',
-            ]);
+            $validateData = $request->validated();
 
-            $obj = Product::create($validateData);
+            $obj = $storeService->execute($validateData);
 
-            return response()->json([
-                'status' => 201,
-                'success' => true,
-                'message' => 'Producto creado correctamente',
-                'data' => $obj
-            ], 201);
+            if ($obj === false || $obj === null) {
+                return $this->errorResponseWithMessage(
+                    'Debe proporcionar una categoría existente o un nombre para crear una nueva categoría',
+                    400
+                );
+            }
+
+            return $this->successResponseWithData(
+                $obj,
+                'Producto creado correctamente',
+                201
+            );
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'success' => false,
-                'message' => 'Error al crear el producto',
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponseWithMessage(
+                'Error al crear el producto: ' . $e->getMessage(),
+                500
+            );
         }
     }
 

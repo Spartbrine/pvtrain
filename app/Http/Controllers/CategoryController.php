@@ -2,15 +2,21 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\Category\CategoryStoreService;
+use App\Http\Requests\CategoryStoreRequest;
+use App\Services\Category\CategoryIndexService;
 use Illuminate\Http\Request;
-use App\models\Category;
+use App\Models\Category;
 
 class CategoryController extends Controller
 {
     public function index(Request $request)
     {
+        $categoryIndexService = new CategoryIndexService();
+
         try {
-            $obj = Category::all();
+            $obj = $categoryIndexService->execute($request->all());
+
             return $this->successResponseWithData(
                 $obj,
                 "Categoría obtenida con éxito"
@@ -46,30 +52,35 @@ class CategoryController extends Controller
         }
     }
 
-    public function store(Request $request)
+    public function store(CategoryStoreRequest $request)
     {
-        try {
-            $validateData = $request->validate([
-                'name' => 'required|string|max:255',
-                'description' => 'nullable|string|max:1000',
-            ]);
+        $storeService = new CategoryStoreService();
 
-            $obj = Category::create($validateData);
-            return response()->json([
-                'status' => 201,
-                'success' => true,
-                'message' => 'Categoría creada correctamente',
-                'data' => $obj
-            ], 201);
+        try {
+            $data = $request->validated();
+
+            $obj = $storeService->execute($data);
+
+            if ($obj && !$obj->id) {
+                return $this->errorResponseWithMessage(
+                    'Ocurrió un error al crear la Categoría',
+                    500,
+                    null
+                );
+            }
+
+            return $this->successResponseWithData(
+                $obj,
+                "Categoría creada con éxito",
+                201
+            );
 
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 500,
-                'success' => false,
-                'message' => 'Ocurrio un error al crear la Categoría',
-                'data' => null,
-                'error' => $e->getMessage()
-            ], 500);
+            return $this->errorResponseWithMessage(
+                'Ocurrió un error al crear la Categoría',
+                500,
+                $e->getMessage()
+            );
         }
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BranchStoreRequest;
+use App\Http\Requests\BranchUpdateRequest;
 use App\Services\Branch\BranchCreateService;
 use App\Services\Branch\BranchDestroyService;
 use App\Services\Branch\BranchIndexService;
@@ -74,7 +75,7 @@ class BranchController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(BranchUpdateRequest $request, $id)
     {
         try {
             $data = $request->all();

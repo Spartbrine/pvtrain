@@ -17,8 +17,18 @@ class Product extends Model
         'category_id',
         'status',
     ];
+
+    protected $appends = [
+        'category_name'
+    ];
+
     public function category()
     {
         return $this->hasOne(Category::class, 'id', 'category_id');
+    }
+
+    public function getCategoryNameAttribute()
+    {
+        return $this->category ? $this->category->name : null;
     }
 }
