@@ -12,7 +12,7 @@ class ProductStoreService
     {
         $category = '';
 
-        if (!isset($data['category_id']) && isset($data['category_name']) && $data['category_name'] === '')
+        if (!isset($data['category_id']) && !isset($data['category_name']) && isset($data['category_name']) === '')
             return false;
 
         if (isset($data['category_name']) && $data['category_name'] !== '') {
